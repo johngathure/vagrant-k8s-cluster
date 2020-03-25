@@ -7,7 +7,7 @@ servers = [
         :type => "master",
         :box => "ubuntu/xenial64",
         :box_version => "20200320.0.0",
-        :network_ip => "192.168.205.10",
+        :network_ip => "192.168.50.10",
         :mem => "2048",
         :cpu => "2"
     },
@@ -16,7 +16,7 @@ servers = [
         :type => "node",
         :box => "ubuntu/xenial64",
         :box_version => "20200320.0.0",
-        :network_ip => "192.168.205.11",
+        :network_ip => "192.168.50.11",
         :mem => "2048",
         :cpu => "2"
     },
@@ -118,9 +118,13 @@ SCRIPT
 
 $configureNode = <<-SCRIPT
     echo "This is worker"
+
+    # Install sshpas
     apt-get install -y sshpass
-    sshpass -p "vagrant" scp -o StrictHostKeyChecking=no vagrant@192.168.205.10:/etc/kubeadm_join_cmd.sh .
-    sh ./kubeadm_join_cmd.sh
+
+    # copy join command script to node and run it for node to join cluster
+    sshpass -p "vagrant" scp -o StrictHostKeyChecking=no vagrant@192.168.50.10:/etc/kubeadm_join_cmd.sh .
+    /bin/bash ./kubeadm_join_cmd.sh
 SCRIPT
 
 Vagrant.configure("2") do |config|
