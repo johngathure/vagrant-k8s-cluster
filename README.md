@@ -28,6 +28,8 @@ These instructions will get you a copy of the project up and running on your loc
   $ vagrant ssh master -c 'kubectl apply -f /srv/app/k8s/hello-world-service.yaml'
   ```
 
+* To view the application, visit [hello-world-spring-boot](http://localhost:8080/)
+
 ## Running the tests
 
 * To run tests run the following
