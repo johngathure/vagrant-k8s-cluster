@@ -29,15 +29,6 @@ servers = [
         :mem => "2048",
         :cpu => "2"
     },
-    {
-        :name => "node-3",
-        :type => "node",
-        :box => "ubuntu/xenial64",
-        :box_version => "20200320.0.0",
-        :network_ip => "192.168.50.13",
-        :mem => "2048",
-        :cpu => "2"
-    }
 ]
 
 # This script to install k8s using kubeadm will get executed after a box is provisioned
