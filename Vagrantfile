@@ -66,15 +66,15 @@ EOF
     # kubelet requires swap off
     swapoff -a
     # keep swap off after reboot
-    sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
     # Get ip of box
     IP_ADDR=`ifconfig enp0s8 | grep Mask | awk '{print $2}'| cut -f2 -d:`
     # set node-ip
-    sudo sed -i "/^[^#]*KUBELET_EXTRA_ARGS=/c\KUBELET_EXTRA_ARGS=--node-ip=$IP_ADDR" /etc/default/kubelet
+    sed -i "/^[^#]*KUBELET_EXTRA_ARGS=/c\KUBELET_EXTRA_ARGS=--node-ip=$IP_ADDR" /etc/default/kubelet
 
     # Restart kubectl
-    sudo systemctl restart kubelet
+    systemctl restart kubelet
 SCRIPT
 
 $configureMaster = <<-SCRIPT
@@ -86,9 +86,9 @@ $configureMaster = <<-SCRIPT
     kubeadm init --apiserver-advertise-address=$IP_ADDR --apiserver-cert-extra-sans=$IP_ADDR  --node-name $HOST_NAME --pod-network-cidr=192.168.0.0/16
 
     #copying credentials to regular user - vagrant
-    sudo --user=vagrant mkdir -p /home/vagrant/.kube
+    mkdir -p /home/vagrant/.kube
     cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
-    chown $(id -u vagrant):$(id -g vagrant) /home/vagrant/.kube/config
+    chown $(id -u vagrant):$(id -g vagrant) /home/vagrant/.kube/config -R
     export KUBECONFIG=/etc/kubernetes/admin.conf
 
     # install Calico pod network addon
@@ -96,8 +96,8 @@ $configureMaster = <<-SCRIPT
     kubeadm token create --print-join-command >> /etc/kubeadm_join_cmd.sh
     chmod +x /etc/kubeadm_join_cmd.sh
     # required for setting up password less ssh between guest VMs
-    sudo sed -i "/^[^#]*PasswordAuthentication[[:space:]]no/c\PasswordAuthentication yes" /etc/ssh/sshd_config
-    sudo service sshd restart
+    sed -i "/^[^#]*PasswordAuthentication[[:space:]]no/c\PasswordAuthentication yes" /etc/ssh/sshd_config
+    service sshd restart
 SCRIPT
 
 $configureNode = <<-SCRIPT
