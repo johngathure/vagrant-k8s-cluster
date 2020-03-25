@@ -161,6 +161,7 @@ Vagrant.configure("2") do |config|
 
             if opts[:type] == "master"
                 config.vm.provision "shell", inline: $configureMaster
+                config.vm.network "forwarded_port", guest: 30001, host: 8080
             else
                 config.vm.provision "shell", inline: $configureNode
             end
