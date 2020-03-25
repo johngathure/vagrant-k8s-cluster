@@ -25,34 +25,35 @@ servers = [
         :type => "node",
         :box => "ubuntu/xenial64",
         :box_version => "20200320.0.0",
-        :network_ip => "192.168.205.12",
+        :network_ip => "192.168.50.12",
         :mem => "2048",
         :cpu => "2"
     },
-    # {
-    #     :name => "node-3",
-    #     :type => "node",
-    #     :box => "ubuntu/xenial64",
-    #     :box_version => "20200320.0.0",
-    #     :network_ip => "192.168.205.13",
-    #     :mem => "2048",
-    #     :cpu => "2"
-    # }
+    {
+        :name => "node-3",
+        :type => "node",
+        :box => "ubuntu/xenial64",
+        :box_version => "20200320.0.0",
+        :network_ip => "192.168.50.13",
+        :mem => "2048",
+        :cpu => "2"
+    }
 ]
 
 # This script to install k8s using kubeadm will get executed after a box is provisioned
 $configureBox = <<-SCRIPT
-    # install docker v17.03
-    # reason for not using docker provision is that it always installs latest version of the docker, but kubeadm requires 17.03 or older
     apt-get update
     apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
+    # Install docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    add-apt-repository "deb https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable"
-    apt-get update && apt-get install -y docker-ce=$(apt-cache madison docker-ce | grep 17.03 | head -1 | awk '{print $3}')
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") $(lsb_release -cs) stable"
+    apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
     # run docker commands as vagrant user (sudo not required)
     usermod -aG docker vagrant
-    # Setup daemon.
+
+    # change docker cgroup driver.
     cat > /etc/docker/daemon.json <<EOF
     {
       "exec-opts": ["native.cgroupdriver=systemd"],
@@ -64,12 +65,11 @@ $configureBox = <<-SCRIPT
     }
 EOF
 
-    mkdir -p /etc/systemd/system/docker.service.d
     # Restart docker.
     systemctl daemon-reload
     systemctl restart docker
 
-    # install kubeadm
+    # install kubeadm, kubeadm, kubectl
     apt-get install -y apt-transport-https curl
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
     cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
@@ -84,17 +84,25 @@ EOF
     # keep swap off after reboot
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
-    # Get ip of box
+    # Set nodeip of the box
     IP_ADDR=`ifconfig enp0s8 | grep Mask | awk '{print $2}'| cut -f2 -d:`
-    # set node-ip
-    touch /etc/default/kubelet && sed -i "/^[^#]*KUBELET_EXTRA_ARGS=/c\KUBELET_EXTRA_ARGS=--node-ip=$IP_ADDR" /etc/default/kubelet
+    KUBELET_CONFIG_FILE="/etc/default/kubelet"
+    if [ ! -f "$KUBELET_CONFIG_FILE" ]
+    then
+        touch "$KUBELET_CONFIG_FILE"
+        echo KUBELET_EXTRA_ARGS=--node-ip="$IP_ADDR" >> "$KUBELET_CONFIG_FILE"
+    else
+        sed -i "/^[^#]*KUBELET_EXTRA_ARGS=/c\KUBELET_EXTRA_ARGS=--node-ip=$IP_ADDR" "$KUBELET_CONFIG_FILE"
+    fi
 
     # Restart kubectl
+    systemctl daemon-reload
     systemctl restart kubelet
 SCRIPT
 
 $configureMaster = <<-SCRIPT
     echo "This is master"
+
     # ip of this box
     IP_ADDR=`ifconfig enp0s8 | grep Mask | awk '{print $2}'| cut -f2 -d:`
     # install k8s master
@@ -105,12 +113,14 @@ $configureMaster = <<-SCRIPT
     mkdir -p /home/vagrant/.kube
     cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
     chown $(id -u vagrant):$(id -g vagrant) /home/vagrant/.kube/config -R
-    export KUBECONFIG=/etc/kubernetes/admin.conf
 
     # install Calico pod network addon
     kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+
+    # create join command script
     kubeadm token create --print-join-command >> /etc/kubeadm_join_cmd.sh
     chmod +x /etc/kubeadm_join_cmd.sh
+
     # required for setting up password less ssh between guest VMs
     sed -i "/^[^#]*PasswordAuthentication[[:space:]]no/c\PasswordAuthentication yes" /etc/ssh/sshd_config
     service sshd restart
