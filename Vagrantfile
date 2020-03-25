@@ -52,6 +52,22 @@ $configureBox = <<-SCRIPT
 
     # run docker commands as vagrant user (sudo not required)
     usermod -aG docker vagrant
+    # Setup daemon.
+    cat > /etc/docker/daemon.json <<EOF
+    {
+      "exec-opts": ["native.cgroupdriver=systemd"],
+      "log-driver": "json-file",
+      "log-opts": {
+        "max-size": "100m"
+      },
+      "storage-driver": "overlay2"
+    }
+EOF
+
+    mkdir -p /etc/systemd/system/docker.service.d
+    # Restart docker.
+    systemctl daemon-reload
+    systemctl restart docker
 
     # install kubeadm
     apt-get install -y apt-transport-https curl
