@@ -29,15 +29,15 @@ servers = [
         :mem => "2048",
         :cpu => "2"
     },
-    {
-        :name => "node-3",
-        :type => "node",
-        :box => "ubuntu/xenial64",
-        :box_version => "20200320.0.0",
-        :network_ip => "192.168.205.13",
-        :mem => "2048",
-        :cpu => "2"
-    }
+    # {
+    #     :name => "node-3",
+    #     :type => "node",
+    #     :box => "ubuntu/xenial64",
+    #     :box_version => "20200320.0.0",
+    #     :network_ip => "192.168.205.13",
+    #     :mem => "2048",
+    #     :cpu => "2"
+    # }
 ]
 
 # This script to install k8s using kubeadm will get executed after a box is provisioned
@@ -116,6 +116,7 @@ Vagrant.configure("2") do |config|
             config.vm.box_version = opts[:box_version]
             config.vm.hostname = opts[:name]
             config.vm.network "private_network", ip: opts[:network_ip]
+            config.vm.synced_folder "./hello-world", "srv/app/"
 
             config.vm.provider "virtualbox" do |v|
 
