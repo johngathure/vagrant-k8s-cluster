@@ -106,6 +106,7 @@ $configureMaster = <<-SCRIPT
     chown $(id -u vagrant):$(id -g vagrant) /home/vagrant/.kube/config -R
 
     # install Calico pod network addon
+    export KUBECONFIG=/etc/kubernetes/admin.conf
     kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
 
     # create join command script
