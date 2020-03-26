@@ -7,10 +7,37 @@ This is a challenge that depecits the deployment of a Kubernetes cluster on virt
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Pre-requisites
+#### Macos
+1. Install [Homebrew](https://brew.sh/)
 
-1. [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
+2. Install Virtualbox
+   ```
+   $ brew cask install virtualbox
+   ```
+3. Install Vagrant
+   ```
+   $ brew cask install vagrant
+    ```
+#### Linux
+- Use the appropriate package manager for your distribution
+1. Install Virtualbox
+   ```
+   $ sudo apt install virtualbox
+   ```
 
-2. [Vagrant](https://www.vagrantup.com/downloads.html)
+2. Install Vagrant
+   ```
+   $ sudo apt update
+   $ curl -O https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_x86_64.deb
+   $ sudo apt install ./vagrant_2.2.6_x86_64.deb
+   ```
+
+
+ To ensure everything is all set up, run
+    ```
+    $ vagrant --version
+    $  vboxmanage --version
+    ```
 
 ## Installing
 * Run Vagrant to setup the cluster from your terminal.
@@ -60,5 +87,6 @@ In this project, I did the following:
 2. Created a basic SpringBoot application that returns {'hello': 'world'}.
 3. Created a Dockerfile to containerize the application.
 4. Created Kubernetes manifests to deploy the application.
+5. Created Github Actions workflows for pull-requests and pushes to master. 
 
-I believe the project can be further enhanced by creating a CI pipeline that continously tests new features added to the SpringBoot application and checks code quality using a linting tool (ktlint).
+I believe the project can be further enhanced by creating a CD pipeline that grabs the image pushed to the registry and deploys it to a production cluster.
